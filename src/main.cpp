@@ -1,6 +1,7 @@
 #include <TinyGPSPlus.h>
 #include "LoRaWan_APP.h"
 #include "secrets.h"
+#include <string>
 
 /* OTAA para*/
 uint8_t devEui[] = {DEV_EUI};
@@ -144,12 +145,26 @@ static void prepareTxFrame(uint8_t port)
 	// appData[7] = 0x02;
 	// appData[8] = 0x03;
 
-	const char *inputString = "40.90345 2.02180";
-	appDataSize = strlen(inputString);
+	const char *messageType = "0";
+	std::string messPayload = std::string(messageType) + "0";
+	
+	if (gps.location.isValid())
+	{
+		Serial.print(gps.location.lat(), 6);
+		Serial.print(F(","));
+		Serial.print(gps.location.lng(), 6);
+		messPayload += std::to_string(gps.location.lng()) + " " + std::to_string(gps.location.lat());
+	}
+	else
+	{
+		messPayload = messPayload + "nofix";
+	}
+
+	appDataSize = strlen(messPayload.c_str());
 
 	for (int i = 0; i < appDataSize; i++)
 	{
-		appData[i] = inputString[i];
+		appData[i] = messPayload.c_str()[i];
 	}
 }
 
