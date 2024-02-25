@@ -68,7 +68,7 @@ uint8_t confirmedNbTrials = 4;
 // 	"$GPRMC,045251.000,A,3014.4275,N,09749.0626,W,0.51,217.94,030913,,,A*7D\r\n"
 // 	"$GPGGA,045252.000,3014.4273,N,09749.0628,W,1,09,1.3,206.9,M,-22.5,M,,0000*6F\r\n";
 
-static const int RXPin = 36, TXPin = 37;
+static const int8_t RXPin = 38, TXPin = 39;
 static const uint32_t GPSBaud = 9600;
 
 // The TinyGPSPlus object
@@ -76,6 +76,18 @@ TinyGPSPlus gps;
 
 // The serial connection to the GPS device
 SoftwareSerial gpsSerial(RXPin, TXPin);
+
+// This custom version of delay() ensures that the gps object
+// is being "fed".
+static void smartDelay(unsigned long ms)
+{
+	unsigned long start = millis();
+	do
+	{
+		while (gpsSerial.available())
+			gps.encode(gpsSerial.read());
+	} while (millis() - start < ms);
+}
 
 void displayGPSInfo()
 {
@@ -182,11 +194,12 @@ void setup()
 	Serial.begin(115200);
 	gpsSerial.begin(GPSBaud);
 
+	while (!Serial && !gpsSerial)
+	{
+		delay(10);
+	}
 
-
-	Serial.println();
-
-	Serial.println(F("Done."));
+	Serial.println(F("Serial setup done."));
 
 	Mcu.begin();
 
@@ -218,6 +231,7 @@ void loop()
 	}
 	case DEVICE_STATE_SEND:
 	{
+		smartDelay(1000);
 		LoRaWAN.displaySending();
 		prepareTxFrame(appPort);
 		LoRaWAN.send();
