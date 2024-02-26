@@ -92,13 +92,13 @@ static void smartDelay(unsigned long ms)
 }
 
 // void encodeWGs84inHexArray(int lng, int lat, std::array<unsigned char, 8> hexArray){
-void encodeWGs84inHexArray(const std::int32_t lng, const std::int32_t lat, std::array<unsigned char, 8U> &appData){
-	    // Copy the first integer into the first 4 bytes of the array
-		std::memcpy(appData.data(), &lng, sizeof(lng));
+void encodeWGs84inHexArray(const std::int32_t intlng, const std::int32_t intlat, std::array<unsigned char, 8U> &msgPayload)
+{
+	// Copy the first integer into the first 4 bytes of the array
+	std::memcpy(msgPayload.data(), &intlng, sizeof(intlng));
 
-		// Copy the second integer into the next 4 bytes of the array
-		std::memcpy(appData.data() + 4, &lat, sizeof(lat));
-
+	// Copy the second integer into the next 4 bytes of the array
+	std::memcpy(msgPayload.data() + 4, &intlat, sizeof(intlat));
 }
 
 void displayGPSInfo()
@@ -179,7 +179,7 @@ static void prepareTxFrame(uint8_t port)
 	// const char *messageType = "0";
 	// std::string messPayload;
 
-	std::array<unsigned char, 8U> appData{};
+	auto msgPayload = std::array<unsigned char, 8U>{};
 
 	if (gps.location.isValid())
 	{
@@ -187,7 +187,7 @@ static void prepareTxFrame(uint8_t port)
 		// Serial.print(ilng);
 		std::int32_t ilat = gps.location.lat() * 100000;
 		// Serial.print(ilat);
-		encodeWGs84inHexArray(ilng, ilat, appData);
+		encodeWGs84inHexArray(ilng, ilat, msgPayload);
 
 		// Serial.print(gps.location.lat(), 6);
 		// Serial.print(F(","));
@@ -199,12 +199,11 @@ static void prepareTxFrame(uint8_t port)
 	// 	// appData was initialized as {0, 0, 0, 0, 0, 0, 0, 0} and is send a is.
 	// };
 
-	// appDataSize = strlen(messPayload.c_str());
+	appDataSize = sizeof(msgPayload);
 
 	for (int i = 0; i < sizeof(appData); i++)
 	{
-	// 	// appData[i] = messPayload.c_str() c_str()[i];
-		Serial.print(appData[i]);
+		appData[i] = msgPayload[i];
 	}
 }
 
