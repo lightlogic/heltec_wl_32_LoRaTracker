@@ -201,7 +201,7 @@ static void prepareTxFrame(uint8_t port)
 
 	appDataSize = sizeof(msgPayload);
 
-	for (int i = 0; i < sizeof(appData); i++)
+	for (int i = 0; i < appDataSize; i++)
 	{
 		appData[i] = msgPayload[i];
 	}
