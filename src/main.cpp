@@ -2,6 +2,8 @@
 #include "LoRaWan_APP.h"
 #include "secrets.h"
 #include <string>
+#include <cstring>
+#include <array>
 #include <SoftwareSerial.h>
 
 /* OTAA para*/
@@ -89,6 +91,16 @@ static void smartDelay(unsigned long ms)
 	} while (millis() - start < ms);
 }
 
+// void encodeWGs84inHexArray(int lng, int lat, std::array<unsigned char, 8> hexArray){
+void encodeWGs84inHexArray(const std::int32_t lng, const std::int32_t lat, std::array<unsigned char, 8U> &appData){
+	    // Copy the first integer into the first 4 bytes of the array
+		std::memcpy(appData.data(), &lng, sizeof(lng));
+
+		// Copy the second integer into the next 4 bytes of the array
+		std::memcpy(appData.data() + 4, &lat, sizeof(lat));
+
+}
+
 void displayGPSInfo()
 {
 	Serial.print(F("Location: "));
@@ -164,26 +176,35 @@ static void prepareTxFrame(uint8_t port)
 	// appData[7] = 0x02;
 	// appData[8] = 0x03;
 
-	const char *messageType = "0";
-	std::string messPayload = std::string(messageType) + "0";
+	// const char *messageType = "0";
+	// std::string messPayload;
+
+	std::array<unsigned char, 8U> appData{};
 
 	if (gps.location.isValid())
 	{
-		Serial.print(gps.location.lat(), 6);
-		Serial.print(F(","));
-		Serial.print(gps.location.lng(), 6);
-		messPayload += std::to_string(gps.location.lng()) + " " + std::to_string(gps.location.lat());
-	}
-	else
-	{
-		messPayload = messPayload + "nofix";
-	}
+		std::int32_t ilng = gps.location.lng() * 100000;
+		// Serial.print(ilng);
+		std::int32_t ilat = gps.location.lat() * 100000;
+		// Serial.print(ilat);
+		encodeWGs84inHexArray(ilng, ilat, appData);
 
-	appDataSize = strlen(messPayload.c_str());
+		// Serial.print(gps.location.lat(), 6);
+		// Serial.print(F(","));
+		// Serial.print(gps.location.lng(), 6);
+		// messPayload += std::to_string(gps.location.lng()*100000) + " " + std::to_string(gps.location.lat()*100000);
+	}
+	// else
+	// {
+	// 	// appData was initialized as {0, 0, 0, 0, 0, 0, 0, 0} and is send a is.
+	// };
 
-	for (int i = 0; i < appDataSize; i++)
+	// appDataSize = strlen(messPayload.c_str());
+
+	for (int i = 0; i < sizeof(appData); i++)
 	{
-		appData[i] = messPayload.c_str()[i];
+	// 	// appData[i] = messPayload.c_str() c_str()[i];
+		Serial.print(appData[i]);
 	}
 }
 
@@ -194,10 +215,10 @@ void setup()
 	Serial.begin(115200);
 	gpsSerial.begin(GPSBaud);
 
-	while (!Serial && !gpsSerial)
-	{
-		delay(10);
-	}
+	// while (!Serial && !gpsSerial)
+	// {
+	// 	delay(10);
+	// }
 
 	Serial.println(F("Serial setup done."));
 

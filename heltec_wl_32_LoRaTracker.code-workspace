@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../../../mongodb_geoPos_collection_model"
+		},
+		{
+			"path": "../../../UdemyCppEng-master"
 		}
 	],
 	"settings": {}
