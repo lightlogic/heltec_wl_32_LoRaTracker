@@ -246,9 +246,9 @@ static void prepareTxFrame(uint8_t port)
 		std::int32_t ilat = gps.location.lat() * 100000;
 		Serial.print(ilat);
 		std::array<uint8_t, 4> latArray;
-		for (size_t i = 5; i < 8; ++i)
+		for (size_t i = 0; i < 4; ++i)
 		{
-			appData[i] = (ilat >> (i * 8)) & 0xFF; // Extract each byte
+			appData[i+4] = (ilat >> (i * 8)) & 0xFF; // Extract each byte
 			Serial.println(appData[i]);
 		}
 
