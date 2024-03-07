@@ -65,29 +65,28 @@ received unconfirmed downlink: rssi = -49, snr = 7, datarate = 5
 220  ->11011100
 10   ->00001010
 0    ->00000000
-4696429
+4696420
 00000000 01000111 10101001 01101101
 109 ->01101101
 169 ->10101001
 71  ->01000111
 0   ->00000000
 
-RX on freq 868300000 Hz at DR 5
+RX on freq 868100000 Hz at DR 5
 Event : Rx Done
 joined
-711692
-12
-220
-10
-0
-4696420
-12
-220
-10
-0
+711685
+00000000 00001010 11011100 00000101
+5   -> 00000101
+220 -> 11011100
+10  -> 00001010
+0   -> 00000000
+4696422
+00000000 01000111 10101001 01100110
+102 -> 01100110
+169 -> 10101001
+71  -> 01000111
+0   -> 00000000
 confirmed uplink sending ...
-TX on freq 867500000 Hz at DR 5
+TX on freq 867900000 Hz at DR 5
 Event : Tx Done
-RX on freq 867500000 Hz at DR 5
-Event : Rx Done
-received unconfirmed downlink: rssi = -61, snr = 7, datarate = 5

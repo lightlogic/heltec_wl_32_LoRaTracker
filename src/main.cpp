@@ -157,7 +157,11 @@ static void prepareTxFrame(uint8_t port)
 	 *for example, if use REGION_CN470,
 	 *the max value for different DR can be found in MaxPayloadOfDatarateCN470 refer to DataratesCN470 and BandwidthsCN470 in "RegionCN470.h".
 	 */
+	
+	// Set to array of 8 bytes
 	appDataSize = 8;
+
+	// example from lora library
 	// appData[0] = 0xFF;
 	// appData[1] = 0x17;
 	// appData[2] = 0x54;
@@ -176,22 +180,40 @@ static void prepareTxFrame(uint8_t port)
 	if (gps.location.isValid())
 	{
 		std::int32_t ilng = gps.location.lng() * 100000;
-		Serial.println(ilng);
+		// Debug // Serial.println(ilng);
+		/* Example:
+			711685 */
 
 		// Extract and store each byte in the array
 		for (size_t i = 0; i < 4; ++i)
 		{
 			appData[i] = (ilng >> (i * 8)) & 0xFF; // Extract each byte
-			Serial.println(static_cast<int>(appData[i]));
+			// Debug // Serial.println(static_cast<int>(appData[i]));
+			/* Example:
+					711685
+					00000000 00001010 11011100 00000101
+					5   -> 00000101
+					220 -> 11011100
+					10  -> 00001010
+					0   -> 00000000 */
 		}
 
 		std::int32_t ilat = gps.location.lat() * 100000;
-		Serial.println(ilat);
+		// Debug // Serial.println(ilat);
+		/* Example:
+			4696422 */
 
 		for (size_t i = 0; i < 4; ++i)
 		{
 			appData[i + 4] = (ilat >> (i * 8)) & 0xFF; // Extract each byte
-			Serial.println(static_cast<int>(appData[i]));
+			// Debug // Serial.println(static_cast<int>(appData[i + 4]));
+			/* Example:
+			4696422
+			00000000 01000111 10101001 01100110
+			102 -> 01100110
+			169 -> 10101001
+			71  -> 01000111
+			0   -> 00000000*/
 		}
 	}
 }
