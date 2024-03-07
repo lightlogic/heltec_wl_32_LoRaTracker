@@ -1,5 +1,11 @@
+#include <TinyGPSPlus.h>
 #include "LoRaWan_APP.h"
 #include "secrets.h"
+#include <string>
+#include <cstring>
+#include <array>
+#include <SoftwareSerial.h>
+#include <cstdint>
 
 /* OTAA para*/
 uint8_t devEui[] = {DEV_EUI};
@@ -21,7 +27,7 @@ LoRaMacRegion_t loraWanRegion = ACTIVE_REGION;
 DeviceClass_t loraWanClass = CLASS_A;
 
 /*the application data transmission duty cycle.  value in [ms].*/
-uint32_t appTxDutyCycle = 60000;
+uint32_t appTxDutyCycle = 180000;
 
 /*OTAA or ABP*/
 bool overTheAirActivation = true;
@@ -56,6 +62,91 @@ uint8_t appPort = 2;
  */
 uint8_t confirmedNbTrials = 4;
 
+// // A sample NMEA stream.
+// const char *gpsStream =
+// 	"$GPRMC,045103.000,A,3014.1984,N,09749.2872,W,0.67,161.46,030913,,,A*7C\r\n"
+// 	"$GPGGA,045104.000,3014.1985,N,09749.2873,W,1,09,1.2,211.6,M,-22.5,M,,0000*62\r\n"
+// 	"$GPRMC,045200.000,A,3014.3820,N,09748.9514,W,36.88,65.02,030913,,,A*77\r\n"
+// 	"$GPGGA,045201.000,3014.3864,N,09748.9411,W,1,10,1.2,200.8,M,-22.5,M,,0000*6C\r\n"
+// 	"$GPRMC,045251.000,A,3014.4275,N,09749.0626,W,0.51,217.94,030913,,,A*7D\r\n"
+// 	"$GPGGA,045252.000,3014.4273,N,09749.0628,W,1,09,1.3,206.9,M,-22.5,M,,0000*6F\r\n";
+
+static const int8_t RXPin = 38, TXPin = 39;
+static const uint32_t GPSBaud = 9600;
+
+// The TinyGPSPlus object
+TinyGPSPlus gps;
+
+// The serial connection to the GPS device
+SoftwareSerial gpsSerial(RXPin, TXPin);
+
+// This custom version of delay() ensures that the gps object
+// is being "fed".
+static void smartDelay(unsigned long ms)
+{
+	unsigned long start = millis();
+	do
+	{
+		while (gpsSerial.available())
+			gps.encode(gpsSerial.read());
+	} while (millis() - start < ms);
+}
+
+void displayGPSInfo()
+{
+	Serial.print(F("Location: "));
+	if (gps.location.isValid())
+	{
+		Serial.print(gps.location.lat(), 6);
+		Serial.print(F(","));
+		Serial.print(gps.location.lng(), 6);
+	}
+	else
+	{
+		Serial.print(F("INVALID"));
+	}
+
+	Serial.print(F("  Date/Time: "));
+	if (gps.date.isValid())
+	{
+		Serial.print(gps.date.month());
+		Serial.print(F("/"));
+		Serial.print(gps.date.day());
+		Serial.print(F("/"));
+		Serial.print(gps.date.year());
+	}
+	else
+	{
+		Serial.print(F("INVALID"));
+	}
+
+	Serial.print(F(" "));
+	if (gps.time.isValid())
+	{
+		if (gps.time.hour() < 10)
+			Serial.print(F("0"));
+		Serial.print(gps.time.hour());
+		Serial.print(F(":"));
+		if (gps.time.minute() < 10)
+			Serial.print(F("0"));
+		Serial.print(gps.time.minute());
+		Serial.print(F(":"));
+		if (gps.time.second() < 10)
+			Serial.print(F("0"));
+		Serial.print(gps.time.second());
+		Serial.print(F("."));
+		if (gps.time.centisecond() < 10)
+			Serial.print(F("0"));
+		Serial.print(gps.time.centisecond());
+	}
+	else
+	{
+		Serial.print(F("INVALID"));
+	}
+
+	Serial.println();
+}
+
 /* Prepares the payload of the frame */
 static void prepareTxFrame(uint8_t port)
 {
@@ -66,22 +157,64 @@ static void prepareTxFrame(uint8_t port)
 	 *for example, if use REGION_CN470,
 	 *the max value for different DR can be found in MaxPayloadOfDatarateCN470 refer to DataratesCN470 and BandwidthsCN470 in "RegionCN470.h".
 	 */
-	// appDataSize = 8;
-	// appData[0] = 0x00;
-	// appData[1] = 0x01;
-	// appData[2] = 0x02;
-	// appData[3] = 0x03;
+	
+	// Set to array of 8 bytes
+	appDataSize = 8;
+
+	// example from lora library
+	// appData[0] = 0xFF;
+	// appData[1] = 0x17;
+	// appData[2] = 0x54;
+	// appData[3] = 0x51;
 	// appData[5] = 0x00;
-	// appData[6] = 0x01;
-	// appData[7] = 0x02;
-	// appData[8] = 0x03;
+	// appData[6] = 0x47;
+	// appData[7] = 0xA9;
+	// appData[8] = 0x6F;
 
-	const char *inputString = "40.90345 2.02180";
-	appDataSize = strlen(inputString);
+	// // const char *messageType = "0";
+	// // std::string messPayload;
 
-	for (int i = 0; i < appDataSize; i++)
+	// // auto msgPayload = std::array<unsigned char, 8U>{};
+	// std::array<unsigned char, 8U> msgPayload{};
+
+	if (gps.location.isValid())
 	{
-		appData[i] = inputString[i];
+		std::int32_t ilng = gps.location.lng() * 100000;
+		// Debug // Serial.println(ilng);
+		/* Example:
+			711685 */
+
+		// Extract and store each byte in the array
+		for (size_t i = 0; i < 4; ++i)
+		{
+			appData[i] = (ilng >> (i * 8)) & 0xFF; // Extract each byte
+			// Debug // Serial.println(static_cast<int>(appData[i]));
+			/* Example:
+					711685
+					00000000 00001010 11011100 00000101
+					5   -> 00000101
+					220 -> 11011100
+					10  -> 00001010
+					0   -> 00000000 */
+		}
+
+		std::int32_t ilat = gps.location.lat() * 100000;
+		// Debug // Serial.println(ilat);
+		/* Example:
+			4696422 */
+
+		for (size_t i = 0; i < 4; ++i)
+		{
+			appData[i + 4] = (ilat >> (i * 8)) & 0xFF; // Extract each byte
+			// Debug // Serial.println(static_cast<int>(appData[i + 4]));
+			/* Example:
+			4696422
+			00000000 01000111 10101001 01100110
+			102 -> 01100110
+			169 -> 10101001
+			71  -> 01000111
+			0   -> 00000000*/
+		}
 	}
 }
 
@@ -90,7 +223,17 @@ RTC_DATA_ATTR bool firstrun = true;
 void setup()
 {
 	Serial.begin(115200);
+	gpsSerial.begin(GPSBaud);
+
+	// while (!Serial && !gpsSerial)
+	// {
+	// 	delay(10);
+	// }
+
+	Serial.println(F("Serial setup done."));
+
 	Mcu.begin();
+
 	if (firstrun)
 	{
 		LoRaWAN.displayMcuInit();
@@ -119,6 +262,7 @@ void loop()
 	}
 	case DEVICE_STATE_SEND:
 	{
+		smartDelay(1000);
 		LoRaWAN.displaySending();
 		prepareTxFrame(appPort);
 		LoRaWAN.send();
