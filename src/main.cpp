@@ -92,55 +92,6 @@ static void smartDelay(unsigned long ms)
 	} while (millis() - start < ms);
 }
 
-// // void encodeWGs84inHexArray(int lng, int lat, std::array<unsigned char, 8> hexArray){
-// void encodeWGs84inHexArray(const std::int32_t intlng, const std::int32_t intlat, std::array<unsigned char, 8U> &msgPayload)
-// {
-// 	// Copy the first integer into the first 4 bytes of the array
-// 	std::memcpy(msgPayload.data(), &intlng, sizeof(intlng));
-
-// 	// Copy the second integer into the next 4 bytes of the array
-// 	std::memcpy(msgPayload.data() + 4, &intlat, sizeof(intlat));
-// }
-
-// std::vector<std::string> intToBinaryRepresentation(const std::int32_t number) {
-//     // Assuming we work on a system where int is 4 bytes, adjust if necessary
-//     std::array<unsigned char, sizeof(int)> byte_array;
-
-//     // Copying the integer into the byte array considering system endianness
-//     for (size_t i = 0; i < sizeof(int); ++i) {
-//         byte_array[sizeof(int) - i - 1] = (number >> (i * 8)) & 0xFF;
-//     }
-
-//     // Convert each byte in the array to its binary representation
-//     std::vector<std::string> binaries;
-//     for (unsigned char byte : byte_array) {
-//         binaries.push_back(std::bitset<8>(byte).to_string());
-//     }
-
-//     return binaries;
-// }
-
-// std::vector<std::string> binaryToHex(const std::vector<std::string>& binaryStrings) {
-//     std::vector<std::string> hexStrings;
-
-//     for (const auto& binStr : binaryStrings) {
-//         // Convert binary string to an integer using std::bitset
-//         unsigned long n = std::bitset<8>(binStr).to_ulong();
-
-//         // Use a stringstream to format the number as a hex string
-//         std::stringstream ss;
-//         ss << "0x"
-//            << std::uppercase // Use uppercase for A-F
-//            << std::setfill('0') << std::setw(2) // Ensure 2 characters, padding with 0
-//            << std::hex << n; // Convert to hex
-
-//         // Add the formatted hex string to the result vector
-//         hexStrings.push_back(ss.str());
-//     }
-
-//     return hexStrings;
-// }
-
 void displayGPSInfo()
 {
 	Serial.print(F("Location: "));
@@ -206,7 +157,7 @@ static void prepareTxFrame(uint8_t port)
 	 *for example, if use REGION_CN470,
 	 *the max value for different DR can be found in MaxPayloadOfDatarateCN470 refer to DataratesCN470 and BandwidthsCN470 in "RegionCN470.h".
 	 */
-	// appDataSize = 8;
+	appDataSize = 8;
 	// appData[0] = 0xFF;
 	// appData[1] = 0x17;
 	// appData[2] = 0x54;
@@ -222,67 +173,27 @@ static void prepareTxFrame(uint8_t port)
 	// // auto msgPayload = std::array<unsigned char, 8U>{};
 	// std::array<unsigned char, 8U> msgPayload{};
 
-	// if (gps.location.isValid())
-	// {
-	// 	std::int32_t ilng = gps.location.lng() * 100000;
-	// 	Serial.print(ilng);
-	// 	std::int32_t ilat = gps.location.lat() * 100000;
-	// 	Serial.print(ilat);
-	// 	encodeWGs84inHexArray(ilng, ilat, msgPayload);
-
 	if (gps.location.isValid())
 	{
 		std::int32_t ilng = gps.location.lng() * 100000;
-		Serial.print(ilng);
+		Serial.println(ilng);
 
-		std::array<uint8_t, 4> lngArray;
 		// Extract and store each byte in the array
 		for (size_t i = 0; i < 4; ++i)
 		{
 			appData[i] = (ilng >> (i * 8)) & 0xFF; // Extract each byte
-			Serial.println(appData[i]);
+			Serial.println(static_cast<int>(appData[i]));
 		}
 
 		std::int32_t ilat = gps.location.lat() * 100000;
-		Serial.print(ilat);
-		std::array<uint8_t, 4> latArray;
+		Serial.println(ilat);
+
 		for (size_t i = 0; i < 4; ++i)
 		{
-			appData[i+4] = (ilat >> (i * 8)) & 0xFF; // Extract each byte
-			Serial.println(appData[i]);
+			appData[i + 4] = (ilat >> (i * 8)) & 0xFF; // Extract each byte
+			Serial.println(static_cast<int>(appData[i]));
 		}
-
-		// std::cout << "Array in hexadecimal = [";
-		// for (size_t i = 0; i < 8; ++i)
-		// {
-		// 	std::cout << "0x" << std::hex << std::uppercase << +appData[i];
-		// 	if (i < 8)
-		// 		std::cout << ", ";
-		// }
-		// std::cout << "]" << std::endl;
 	}
-
-	// encodeWGs84inHexArray(ilng, ilat, msgPayload);
-
-	// 	// Serial.print(gps.location.lat(), 6);
-	// 	// Serial.print(F(","));
-	// 	// Serial.print(gps.location.lng(), 6);
-	// 	// messPayload += std::to_string(gps.location.lng()*100000) + " " + std::to_string(gps.location.lat()*100000);
-	// }
-	// // else
-	// // {
-	// // 	// appData was initialized as {0, 0, 0, 0, 0, 0, 0, 0} and is send a is.
-	// // };
-
-	// // appDataSize = sizeof(msgPayload);
-
-	// std::copy(msgPayload.begin(), msgPayload.end(), appData);
-	// Serial.println(sizeof(appData));
-	// for (int i = 0; i < appDataSize; i++)
-	// {
-	// 	Serial.println(appData[i]);
-	// 	// appData[i] = msgPayload[i];
-	// }
 }
 
 RTC_DATA_ATTR bool firstrun = true;
