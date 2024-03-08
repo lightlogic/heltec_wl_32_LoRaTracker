@@ -9,8 +9,8 @@ function decodeUplink(input) {
     }
     return {
       data: {
-        lng: ilng,
-        lat: ilat
+        lng: ilng / 100000,
+        lat: ilat / 100000
       },
       warnings: [],
       errors: []

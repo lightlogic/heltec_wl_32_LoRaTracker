@@ -187,15 +187,15 @@ static void prepareTxFrame(uint8_t port)
 		// Extract and store each byte in the array
 		for (size_t i = 0; i < 4; ++i)
 		{
-			appData[i] = (ilng >> (i * 8)) & 0xFF; // Extract each byte
+			appData[3-i] = (ilng >> (i * 8)) & 0xFF; // Extract each byte
 			// Debug // Serial.println(static_cast<int>(appData[i]));
 			/* Example:
 					711685
 					00000000 00001010 11011100 00000101
-					5   -> 00000101 (MSB)
-					220 -> 11011100
+					0   -> 00000000 (LSB)
 					10  -> 00001010
-					0   -> 00000000 (LSB) */
+					220 -> 11011100
+					5   -> 00000101 (MSB) */
 		}
 
 		std::int32_t ilat = gps.location.lat() * 100000;
@@ -205,15 +205,15 @@ static void prepareTxFrame(uint8_t port)
 
 		for (size_t i = 0; i < 4; ++i)
 		{
-			appData[i + 4] = (ilat >> (i * 8)) & 0xFF; // Extract each byte
+			appData[7-i] = (ilat >> (i * 8)) & 0xFF; // Extract each byte
 			// Debug // Serial.println(static_cast<int>(appData[i + 4]));
 			/* Example:
 			4696422
 			00000000 01000111 10101001 01100110
-			102 -> 01100110 (MSB)
-			169 -> 10101001
+			0   -> 00000000 (LSB)
 			71  -> 01000111
-			0   -> 00000000 (LSB) */
+			169 -> 10101001
+			102 -> 01100110 (MSB) */
 		}
 	}
 }
