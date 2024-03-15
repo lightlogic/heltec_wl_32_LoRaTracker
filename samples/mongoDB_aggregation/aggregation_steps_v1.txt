@@ -1,0 +1,31 @@
+My Pipeline
+
+[
+  {
+    $project: {
+      timestamp: 1,
+      "features.geometry.coordinates": 1,
+      _id: 0,
+    },
+  },
+  {
+    $unwind: "$features",
+  },
+  {
+    $project: {
+      timestamp: 1,
+      latitude: {
+        $arrayElemAt: [
+          "$features.geometry.coordinates",
+          0,
+        ],
+      },
+      longitude: {
+        $arrayElemAt: [
+          "$features.geometry.coordinates",
+          1,
+        ],
+      },
+    },
+  },
+]

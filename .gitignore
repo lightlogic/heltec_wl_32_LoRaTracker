@@ -5,3 +5,4 @@
 .vscode/ipch
 include/secrets.h
 samples/*.json
+X509-cert-85557517824000550_secret_atlas.pem
